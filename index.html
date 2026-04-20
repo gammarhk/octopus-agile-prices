@@ -712,13 +712,15 @@ function render() {
       last.prices.push(slot.value_inc_vat);
       last.avg = last.prices.reduce((a, b) => a + b, 0) / last.prices.length;
       last.min = Math.min(last.min, slot.value_inc_vat);
+      last.max = Math.max(last.max, slot.value_inc_vat);
     } else {
       mergedPeriods.push({
         valid_from: slot.valid_from,
         valid_to: slot.valid_to,
         prices: [slot.value_inc_vat],
         avg: slot.value_inc_vat,
-        min: slot.value_inc_vat
+        min: slot.value_inc_vat,
+        max: slot.value_inc_vat
       });
     }
   }
@@ -819,7 +821,7 @@ function render() {
           return `
             <div class="slot">
               <span class="slot-time">${dayLabel} ${formatTime(fromDate)}–${formatTime(toDate)}<br><small style="color:var(--text-muted)">${durationStr} · 平均 ${period.avg.toFixed(1)}p</small></span>
-              <span class="slot-price" style="color:${priceColor(period.min)}">${period.min.toFixed(1)}p</span>
+              <span class="slot-price" style="color:${priceColor(period.avg)}"><span style="color:${priceColor(period.min)}">${period.min.toFixed(1)}</span>–<span style="color:${priceColor(period.max)}">${period.max.toFixed(1)}p</span></span>
             </div>
           `;
         }).join('')}
