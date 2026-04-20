@@ -1,15 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Agile Prices">
+<meta name="apple-mobile-web-app-title" content="電價查詢">
 <meta name="theme-color" content="#0a0e1a">
 <link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Octopus Agile Prices</title>
+<title>Octopus Agile 電價</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -251,7 +253,7 @@
     box-shadow: 0 0 12px rgba(167,139,250,0.4);
   }
   .bar-wrapper.current::after {
-    content: 'NOW';
+    content: '現在';
     position: absolute;
     bottom: -24px;
     font-family: 'DM Mono', monospace;
@@ -461,17 +463,17 @@
 <div class="app" id="app">
   <div class="loading" id="initial-loading">
     <div class="loading-spinner"></div>
-    <div>Loading prices...</div>
+    <div>正在載入電價...</div>
   </div>
 </div>
 
 <script>
 const REGIONS = {
-  A: 'East England', B: 'East Midlands', C: 'London',
-  D: 'Merseyside & N. Wales', E: 'West Midlands', F: 'North East',
-  G: 'North West', H: 'Southern England', J: 'South East',
-  K: 'South Wales', L: 'South West', M: 'Yorkshire',
-  N: 'South Scotland', P: 'North Scotland'
+  A: '英格蘭東部', B: '東米德蘭', C: '倫敦',
+  D: '默西塞德及北威爾斯', E: '西米德蘭', F: '東北部',
+  G: '西北部', H: '英格蘭南部', J: '東南部',
+  K: '南威爾斯', L: '西南部', M: '約克郡',
+  N: '蘇格蘭南部', P: '蘇格蘭北部'
 };
 
 const PRODUCTS = ['AGILE-24-10-01', 'AGILE-FLEX-22-11-25'];
@@ -530,10 +532,7 @@ function getCurrentSlot(rates) {
   });
 }
 
-let debugLog = [];
-
 async function fetchRates(region) {
-  debugLog = [];
   const now = new Date();
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);
@@ -542,26 +541,14 @@ async function fetchRates(region) {
   const tomorrowEnd = new Date(todayEnd);
   tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
 
-  debugLog.push(`now: ${now.toISOString()}`);
-  debugLog.push(`todayStart: ${todayStart.toISOString()}`);
-  debugLog.push(`todayEnd: ${todayEnd.toISOString()}`);
-
-  // Try each product code until one returns data
   for (const product of PRODUCTS) {
     try {
       const url = getApiUrl(product, region);
-      debugLog.push(`Trying: ${url}`);
       const resp = await fetch(url);
-      debugLog.push(`Status: ${resp.status}`);
-      if (!resp.ok) { debugLog.push('Not OK, skipping'); continue; }
+      if (!resp.ok) continue;
       const data = await resp.json();
 
       let allRates = data.results || [];
-      debugLog.push(`Results count: ${allRates.length}`);
-      if (allRates.length > 0) {
-        debugLog.push(`First: ${allRates[0].valid_from}`);
-        debugLog.push(`Last: ${allRates[allRates.length-1].valid_from}`);
-      }
       if (allRates.length === 0) continue;
 
       allRates.sort((a, b) => new Date(a.valid_from) - new Date(b.valid_from));
@@ -576,11 +563,8 @@ async function fetchRates(region) {
         return from >= todayEnd && from < tomorrowEnd;
       });
 
-      debugLog.push(`Today rates: ${todayRates.length}, Tomorrow: ${tomorrowRates.length}`);
-
       return { today: todayRates, tomorrow: tomorrowRates };
     } catch (e) {
-      debugLog.push(`Error: ${e.message}`);
       continue;
     }
   }
@@ -611,12 +595,12 @@ function render() {
   if (state.loading) {
     app.innerHTML = `
       <div class="header">
-        <h1>⚡ Agile Prices</h1>
+        <h1>⚡ Agile 電價</h1>
         <button class="region-btn" onclick="toggleModal()">${state.region} · ${REGIONS[state.region]}</button>
       </div>
       <div class="loading">
         <div class="loading-spinner"></div>
-        <div>Loading prices...</div>
+        <div>正在載入電價...</div>
       </div>
     `;
     return;
@@ -625,18 +609,14 @@ function render() {
   if (state.error) {
     app.innerHTML = `
       <div class="header">
-        <h1>⚡ Agile Prices</h1>
+        <h1>⚡ Agile 電價</h1>
         <button class="region-btn" onclick="toggleModal()">${state.region} · ${REGIONS[state.region]}</button>
       </div>
       <div class="no-data">
         <div class="emoji">😵</div>
-        <div>Couldn't load prices<br><small style="color:var(--text-muted)">${state.error}</small></div>
+        <div>無法載入電價<br><small style="color:var(--text-muted)">${state.error}</small></div>
         <br>
-        <button onclick="loadData()" style="background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple);border-radius:8px;padding:10px 20px;font-family:inherit;font-size:14px;cursor:pointer;">Try Again</button>
-      </div>
-      <div style="margin-top:24px;padding:12px;background:#1e293b;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;color:#94a3b8;word-break:break-all;">
-        <div style="color:#a78bfa;margin-bottom:8px;">DEBUG</div>
-        ${debugLog.map(l => `<div>${l}</div>`).join('')}
+        <button onclick="loadData()" style="background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple);border-radius:8px;padding:10px 20px;font-family:inherit;font-size:14px;cursor:pointer;">重試</button>
       </div>
     `;
     renderModal();
@@ -666,7 +646,7 @@ function render() {
   if (current) {
     const end = new Date(current.valid_to);
     const mins = Math.round((end - now) / 60000);
-    nextSlotText = `${mins} min${mins !== 1 ? 's' : ''} left`;
+    nextSlotText = `剩餘 ${mins} 分鐘`;
   }
 
   // Chart
@@ -680,12 +660,12 @@ function render() {
 
   app.innerHTML = `
     <div class="header fade-up">
-      <h1>⚡ Agile Prices</h1>
+      <h1>⚡ Agile 電價</h1>
       <button class="region-btn" onclick="toggleModal()">${state.region} · ${REGIONS[state.region]}</button>
     </div>
 
     <div class="hero ${heroClass} fade-up">
-      <div class="hero-label">Right Now</div>
+      <div class="hero-label">目前電價</div>
       <div class="hero-price">${currentPrice !== null ? currentPrice.toFixed(1) : '—'}<span class="unit">p</span></div>
       <div class="hero-time">
         ${current ? formatTimeRange(current.valid_from, current.valid_to) : ''}
@@ -695,25 +675,25 @@ function render() {
 
     <div class="stats fade-up">
       <div class="stat">
-        <div class="stat-label">Lowest</div>
+        <div class="stat-label">最低</div>
         <div class="stat-value low">${minPrice.toFixed(1)}p</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Average</div>
+        <div class="stat-label">平均</div>
         <div class="stat-value avg">${avgPrice.toFixed(1)}p</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Highest</div>
+        <div class="stat-label">最高</div>
         <div class="stat-value high">${maxPrice.toFixed(1)}p</div>
       </div>
     </div>
 
     <div class="fade-up">
       <div class="section-header">
-        <span class="section-title">Half-Hourly Prices</span>
+        <span class="section-title">每半小時電價</span>
         <div class="tab-group">
-          <button class="tab ${state.activeTab === 'today' ? 'active' : ''}" onclick="switchTab('today')">Today</button>
-          <button class="tab ${state.activeTab === 'tomorrow' ? 'active' : ''}" onclick="switchTab('tomorrow')">${hasTomorrow ? 'Tomorrow' : 'Tomorrow ⏳'}</button>
+          <button class="tab ${state.activeTab === 'today' ? 'active' : ''}" onclick="switchTab('today')">今日</button>
+          <button class="tab ${state.activeTab === 'tomorrow' ? 'active' : ''}" onclick="switchTab('tomorrow')">${hasTomorrow ? '明日' : '明日 ⏳'}</button>
         </div>
       </div>
       ${rates.length > 0 ? `
@@ -721,12 +701,12 @@ function render() {
           <div class="chart-scroll">
             <div class="chart">${chartHtml}</div>
           </div>
-          <div class="chart-hint">Scroll → to see all slots · Tap a bar for price</div>
+          <div class="chart-hint">向右滑動查看所有時段 · 點擊長條查看價格</div>
         </div>
       ` : `
         <div class="no-data" style="margin-bottom:24px;">
           <div class="emoji">⏳</div>
-          <div>${state.activeTab === 'tomorrow' ? "Tomorrow's prices aren't out yet.<br>They usually appear around 4pm." : 'No price data available.'}</div>
+          <div>${state.activeTab === 'tomorrow' ? "明日電價尚未公佈。<br>通常下午4時後更新。" : '暫無電價資料。'}</div>
         </div>
       `}
     </div>
@@ -734,14 +714,14 @@ function render() {
     ${upcomingCheap.length > 0 ? `
     <div class="fade-up">
       <div class="section-header">
-        <span class="section-title">Cheapest Upcoming</span>
+        <span class="section-title">即將最平時段</span>
       </div>
       <div class="slots">
         ${upcomingCheap.map((slot, i) => {
           const fromDate = toLocalTime(slot.valid_from);
           const toDate = toLocalTime(slot.valid_to);
           const isToday = fromDate.toDateString() === now.toDateString();
-          const dayLabel = isToday ? 'Today' : 'Tomorrow';
+          const dayLabel = isToday ? '今日' : '明日';
           return `
             <div class="slot">
               <span class="slot-rank">${i + 1}.</span>
@@ -755,15 +735,10 @@ function render() {
     ` : ''}
 
     <div class="footer">
-      Prices include VAT · Updates every 30 min<br>
-      ${state.lastUpdated ? `Last refreshed ${formatTime(state.lastUpdated)}` : ''}
+      價格已含增值稅 · 每30分鐘更新<br>
+      ${state.lastUpdated ? `上次更新 ${formatTime(state.lastUpdated)}` : ''}
       <br><br>
-      <span style="cursor:pointer;color:var(--purple)" onclick="loadData()">↻ Refresh now</span>
-    </div>
-
-    <div style="margin-top:24px;padding:12px;background:#1e293b;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;color:#94a3b8;word-break:break-all;">
-      <div style="color:#a78bfa;margin-bottom:8px;">DEBUG</div>
-      ${debugLog.map(l => `<div>${l}</div>`).join('')}
+      <span style="cursor:pointer;color:var(--purple)" onclick="loadData()">↻ 立即重新整理</span>
     </div>
   `;
 
@@ -825,8 +800,8 @@ function renderModal() {
   overlay.className = `modal-overlay ${state.showModal ? 'open' : ''}`;
   overlay.innerHTML = `
     <div class="modal">
-      <h2>Select Region</h2>
-      <p>Choose your electricity region. This is saved for next time.</p>
+      <h2>選擇地區</h2>
+      <p>選擇你的電力供應地區，下次會自動記住。</p>
       <div class="region-grid">
         ${Object.entries(REGIONS).map(([code, name]) => `
           <button class="region-option ${state.region === code ? 'selected' : ''}" onclick="selectRegion('${code}')">
