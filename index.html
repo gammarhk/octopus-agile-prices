@@ -474,7 +474,7 @@ const REGIONS = {
   N: 'South Scotland', P: 'North Scotland'
 };
 
-const PRODUCT = 'AGILE-FLEX-22-11-25';
+const PRODUCTS = ['AGILE-24-10-01', 'AGILE-FLEX-22-11-25'];
 
 let state = {
   region: localStorage.getItem('agile-region') || 'J',
@@ -487,12 +487,12 @@ let state = {
   lastUpdated: null
 };
 
-function getTariffCode(region) {
-  return `E-1R-${PRODUCT}-${region}`;
+function getTariffCode(product, region) {
+  return `E-1R-${product}-${region}`;
 }
 
-function getApiUrl(region, from, to) {
-  return `https://api.octopus.energy/v1/products/${PRODUCT}/electricity-tariffs/${getTariffCode(region)}/standard-unit-rates/?period_from=${from}&period_to=${to}&page_size=100`;
+function getApiUrl(product, region, from, to) {
+  return `https://api.octopus.energy/v1/products/${product}/electricity-tariffs/${getTariffCode(product, region)}/standard-unit-rates/?period_from=${from}&period_to=${to}&page_size=100`;
 }
 
 function toLocalTime(utcStr) {
@@ -542,33 +542,41 @@ async function fetchRates(region) {
   const fromStr = todayStart.toISOString().replace('.000', '');
   const toStr = tomorrowEnd.toISOString().replace('.000', '');
 
-  const url = getApiUrl(region, fromStr, toStr);
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`API returned ${resp.status}`);
-  const data = await resp.json();
+  // Try each product code until one returns data
+  for (const product of PRODUCTS) {
+    try {
+      const url = getApiUrl(product, region, fromStr, toStr);
+      const resp = await fetch(url);
+      if (!resp.ok) continue;
+      const data = await resp.json();
 
-  let allRates = data.results || [];
-  // Handle pagination
-  if (data.next) {
-    const resp2 = await fetch(data.next);
-    const data2 = await resp2.json();
-    allRates = allRates.concat(data2.results || []);
+      let allRates = data.results || [];
+      if (data.next) {
+        const resp2 = await fetch(data.next);
+        const data2 = await resp2.json();
+        allRates = allRates.concat(data2.results || []);
+      }
+
+      if (allRates.length === 0) continue;
+
+      allRates.sort((a, b) => new Date(a.valid_from) - new Date(b.valid_from));
+
+      const todayRates = allRates.filter(r => {
+        const from = new Date(r.valid_from);
+        return from >= todayStart && from < todayEnd;
+      });
+
+      const tomorrowRates = allRates.filter(r => {
+        const from = new Date(r.valid_from);
+        return from >= todayEnd && from < tomorrowEnd;
+      });
+
+      return { today: todayRates, tomorrow: tomorrowRates };
+    } catch (e) {
+      continue;
+    }
   }
-
-  // Sort by valid_from ascending
-  allRates.sort((a, b) => new Date(a.valid_from) - new Date(b.valid_from));
-
-  const todayRates = allRates.filter(r => {
-    const from = new Date(r.valid_from);
-    return from >= todayStart && from < todayEnd;
-  });
-
-  const tomorrowRates = allRates.filter(r => {
-    const from = new Date(r.valid_from);
-    return from >= todayEnd && from < tomorrowEnd;
-  });
-
-  return { today: todayRates, tomorrow: tomorrowRates };
+  throw new Error('Could not fetch rates from any known Agile product code');
 }
 
 async function loadData() {
