@@ -1,7 +1,7 @@
 {
-  "name": "Agile Prices",
-  "short_name": "Agile",
-  "description": "Octopus Agile half-hourly electricity prices",
+  "name": "Agile 電價查詢",
+  "short_name": "電價",
+  "description": "Octopus Agile 每半小時電價查詢",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0a0e1a",
