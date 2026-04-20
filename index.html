@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Agile Prices">
+<meta name="theme-color" content="#0a0e1a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Octopus Agile Prices</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --card: #111827;
+    --card-border: #1e293b;
+    --text: #f1f5f9;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --green: #22c55e;
+    --green-bg: rgba(34,197,94,0.12);
+    --amber: #f59e0b;
+    --amber-bg: rgba(245,158,11,0.12);
+    --red: #ef4444;
+    --red-bg: rgba(239,68,68,0.12);
+    --purple: #a78bfa;
+    --purple-bg: rgba(167,139,250,0.08);
+    --teal: #2dd4bf;
+    --negative: #06b6d4;
+    --negative-bg: rgba(6,182,212,0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px 16px env(safe-area-inset-bottom, 20px);
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding-top: env(safe-area-inset-top, 8px);
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    background: linear-gradient(135deg, var(--teal), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .region-btn {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .region-btn:hover { border-color: var(--purple); color: var(--purple); }
+
+  /* Current Price Hero */
+  .hero {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    text-align: center;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .hero.price-low::before { background: var(--green); }
+  .hero.price-mid::before { background: var(--amber); }
+  .hero.price-high::before { background: var(--red); }
+  .hero.price-neg::before { background: var(--negative); }
+  
+  .hero-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+  .hero-price {
+    font-family: 'DM Mono', monospace;
+    font-size: 64px;
+    font-weight: 500;
+    line-height: 1;
+    margin-bottom: 4px;
+    transition: color 0.4s;
+  }
+  .hero-price .unit {
+    font-size: 24px;
+    color: var(--text-dim);
+    margin-left: 2px;
+  }
+  .hero.price-low .hero-price { color: var(--green); }
+  .hero.price-mid .hero-price { color: var(--amber); }
+  .hero.price-high .hero-price { color: var(--red); }
+  .hero.price-neg .hero-price { color: var(--negative); }
+
+  .hero-time {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 12px;
+  }
+  .hero-time strong { color: var(--text-dim); font-weight: 500; }
+
+  /* Stats row */
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .stat-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 20px;
+    font-weight: 500;
+  }
+  .stat-value.low { color: var(--green); }
+  .stat-value.avg { color: var(--amber); }
+  .stat-value.high { color: var(--red); }
+
+  /* Chart section */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.2px;
+  }
+  .tab-group {
+    display: flex;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .tab {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    background: var(--purple-bg);
+    color: var(--purple);
+  }
+
+  /* Bar chart */
+  .chart-container {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 16px 12px 12px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chart-scroll {
+    min-width: 600px;
+    position: relative;
+  }
+  .chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 180px;
+    padding-bottom: 28px;
+    position: relative;
+  }
+  .bar-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+    position: relative;
+    cursor: pointer;
+  }
+  .bar {
+    width: 100%;
+    min-height: 2px;
+    border-radius: 3px 3px 0 0;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  .bar.negative {
+    border-radius: 0 0 3px 3px;
+    align-self: flex-start;
+  }
+  .bar-wrapper.current .bar {
+    box-shadow: 0 0 12px rgba(167,139,250,0.4);
+  }
+  .bar-wrapper.current::after {
+    content: 'NOW';
+    position: absolute;
+    bottom: -24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--purple);
+    letter-spacing: 0.5px;
+  }
+  .bar-time {
+    position: absolute;
+    bottom: -22px;
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  
+  .bar-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .bar-wrapper:hover .bar-tooltip,
+  .bar-wrapper:active .bar-tooltip {
+    display: block;
+  }
+
+  .chart-hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  /* Cheapest slots */
+  .slots {
+    margin-bottom: 24px;
+  }
+  .slot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+  }
+  .slot-rank {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    width: 28px;
+  }
+  .slot-time {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .slot-price {
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  /* Region modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius) var(--radius) 0 0;
+    width: 100%;
+    max-width: 480px;
+    max-height: 80dvh;
+    overflow-y: auto;
+    padding: 24px 20px env(safe-area-inset-bottom, 24px);
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+  }
+  .modal-overlay.open .modal {
+    transform: translateY(0);
+  }
+  .modal h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .modal p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  .region-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .region-option {
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+  }
+  .region-option:hover, .region-option.selected {
+    border-color: var(--purple);
+    background: var(--purple-bg);
+  }
+  .region-option .region-letter {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--purple);
+    margin-right: 6px;
+  }
+
+  /* Loading state */
+  .loading {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-muted);
+  }
+  .loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--card-border);
+    border-top-color: var(--purple);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 16px 0 8px;
+    line-height: 1.6;
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up {
+    animation: fadeUp 0.5s ease forwards;
+    opacity: 0;
+  }
+  .fade-up:nth-child(2) { animation-delay: 0.05s; }
+  .fade-up:nth-child(3) { animation-delay: 0.1s; }
+  .fade-up:nth-child(4) { animation-delay: 0.15s; }
+  .fade-up:nth-child(5) { animation-delay: 0.2s; }
+
+  /* Scrollbar */
+  .chart-container::-webkit-scrollbar { height: 4px; }
+  .chart-container::-webkit-scrollbar-track { background: transparent; }
+  .chart-container::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 2px; }
+
+  /* No data message */
+  .no-data {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .no-data .emoji { font-size: 32px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <div class="loading" id="initial-loading">
+    <div class="loading-spinner"></div>
+    <div>Loading prices...</div>
+  </div>
+</div>
+
+<script>
+const REGIONS = {
+  A: 'East England', B: 'East Midlands', C: 'London',
+  D: 'Merseyside & N. Wales', E: 'West Midlands', F: 'North East',
+  G: 'North West', H: 'Southern England', J: 'South East',
+  K: 'South Wales', L: 'South West', M: 'Yorkshire',
+  N: 'South Scotland', P: 'North Scotland'
+};
+
+const PRODUCT = 'AGILE-FLEX-22-11-25';
+
+let state = {
+  region: localStorage.getItem('agile-region') || 'J',
+  today: [],
+  tomorrow: [],
+  activeTab: 'today',
+  showModal: false,
+  loading: true,
+  error: null,
+  lastUpdated: null
+};
+
+function getTariffCode(region) {
+  return `E-1R-${PRODUCT}-${region}`;
+}
+
+function getApiUrl(region, from, to) {
+  return `https://api.octopus.energy/v1/products/${PRODUCT}/electricity-tariffs/${getTariffCode(region)}/standard-unit-rates/?period_from=${from}&period_to=${to}&page_size=100`;
+}
+
+function toLocalTime(utcStr) {
+  return new Date(utcStr);
+}
+
+function formatTime(date) {
+  return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function formatTimeRange(from, to) {
+  return `${formatTime(toLocalTime(from))} – ${formatTime(toLocalTime(to))}`;
+}
+
+function priceClass(p) {
+  if (p < 0) return 'neg';
+  if (p < 15) return 'low';
+  if (p < 30) return 'mid';
+  return 'high';
+}
+
+function priceColor(p) {
+  if (p < 0) return 'var(--negative)';
+  if (p < 15) return 'var(--green)';
+  if (p < 30) return 'var(--amber)';
+  return 'var(--red)';
+}
+
+function getCurrentSlot(rates) {
+  const now = new Date();
+  return rates.find(r => {
+    const from = new Date(r.valid_from);
+    const to = new Date(r.valid_to);
+    return now >= from && now < to;
+  });
+}
+
+async function fetchRates(region) {
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(todayStart);
+  todayEnd.setDate(todayEnd.getDate() + 1);
+  const tomorrowEnd = new Date(todayEnd);
+  tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
+
+  const fromStr = todayStart.toISOString().replace('.000', '');
+  const toStr = tomorrowEnd.toISOString().replace('.000', '');
+
+  const url = getApiUrl(region, fromStr, toStr);
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`API returned ${resp.status}`);
+  const data = await resp.json();
+
+  let allRates = data.results || [];
+  // Handle pagination
+  if (data.next) {
+    const resp2 = await fetch(data.next);
+    const data2 = await resp2.json();
+    allRates = allRates.concat(data2.results || []);
+  }
+
+  // Sort by valid_from ascending
+  allRates.sort((a, b) => new Date(a.valid_from) - new Date(b.valid_from));
+
+  const todayRates = allRates.filter(r => {
+    const from = new Date(r.valid_from);
+    return from >= todayStart && from < todayEnd;
+  });
+
+  const tomorrowRates = allRates.filter(r => {
+    const from = new Date(r.valid_from);
+    return from >= todayEnd && from < tomorrowEnd;
+  });
+
+  return { today: todayRates, tomorrow: tomorrowRates };
+}
+
+async function loadData() {
+  state.loading = true;
+  state.error = null;
+  render();
+
+  try {
+    const { today, tomorrow } = await fetchRates(state.region);
+    state.today = today;
+    state.tomorrow = tomorrow;
+    state.lastUpdated = new Date();
+    state.loading = false;
+  } catch (e) {
+    state.error = e.message;
+    state.loading = false;
+  }
+  render();
+}
+
+function render() {
+  const app = document.getElementById('app');
+  
+  if (state.loading) {
+    app.innerHTML = `
+      <div class="header">
+        <h1>⚡ Agile Prices</h1>
+        <button class="region-btn" onclick="toggleModal()">${state.region} · ${REGIONS[state.region]}</button>
+      </div>
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <div>Loading prices...</div>
+      </div>
+    `;
+    return;
+  }
+
+  if (state.error) {
+    app.innerHTML = `
+      <div class="header">
+        <h1>⚡ Agile Prices</h1>
+        <button class="region-btn" onclick="toggleModal()">${state.region} · ${REGIONS[state.region]}</button>
+      </div>
+      <div class="no-data">
+        <div class="emoji">😵</div>
+        <div>Couldn't load prices<br><small style="color:var(--text-muted)">${state.error}</small></div>
+        <br>
+        <button onclick="loadData()" style="background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple);border-radius:8px;padding:10px 20px;font-family:inherit;font-size:14px;cursor:pointer;">Try Again</button>
+      </div>
+    `;
+    renderModal();
+    return;
+  }
+
+  const rates = state.activeTab === 'today' ? state.today : state.tomorrow;
+  const current = getCurrentSlot(state.today);
+  const currentPrice = current ? current.value_inc_vat : null;
+  const heroClass = currentPrice !== null ? `price-${priceClass(currentPrice)}` : '';
+
+  // Stats for today
+  const todayPrices = state.today.map(r => r.value_inc_vat);
+  const minPrice = todayPrices.length ? Math.min(...todayPrices) : 0;
+  const maxPrice = todayPrices.length ? Math.max(...todayPrices) : 0;
+  const avgPrice = todayPrices.length ? todayPrices.reduce((a, b) => a + b, 0) / todayPrices.length : 0;
+
+  // Cheapest upcoming slots
+  const now = new Date();
+  const upcomingCheap = [...state.today, ...state.tomorrow]
+    .filter(r => new Date(r.valid_to) > now)
+    .sort((a, b) => a.value_inc_vat - b.value_inc_vat)
+    .slice(0, 5);
+
+  // Time until next slot
+  let nextSlotText = '';
+  if (current) {
+    const end = new Date(current.valid_to);
+    const mins = Math.round((end - now) / 60000);
+    nextSlotText = `${mins} min${mins !== 1 ? 's' : ''} left`;
+  }
+
+  // Chart
+  const chartHtml = renderChart(rates);
+
+  const hasTomorrow = state.tomorrow.length > 0;
+  const todayDateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  const tomorrowDate = new Date();
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrowDateStr = tomorrowDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+
+  app.innerHTML = `
+    <div class="header fade-up">
+      <h1>⚡ Agile Prices</h1>
+      <button class="region-btn" onclick="toggleModal()">${state.region} · ${REGIONS[state.region]}</button>
+    </div>
+
+    <div class="hero ${heroClass} fade-up">
+      <div class="hero-label">Right Now</div>
+      <div class="hero-price">${currentPrice !== null ? currentPrice.toFixed(1) : '—'}<span class="unit">p</span></div>
+      <div class="hero-time">
+        ${current ? formatTimeRange(current.valid_from, current.valid_to) : ''}
+        ${nextSlotText ? ` · <strong>${nextSlotText}</strong>` : ''}
+      </div>
+    </div>
+
+    <div class="stats fade-up">
+      <div class="stat">
+        <div class="stat-label">Lowest</div>
+        <div class="stat-value low">${minPrice.toFixed(1)}p</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Average</div>
+        <div class="stat-value avg">${avgPrice.toFixed(1)}p</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Highest</div>
+        <div class="stat-value high">${maxPrice.toFixed(1)}p</div>
+      </div>
+    </div>
+
+    <div class="fade-up">
+      <div class="section-header">
+        <span class="section-title">Half-Hourly Prices</span>
+        <div class="tab-group">
+          <button class="tab ${state.activeTab === 'today' ? 'active' : ''}" onclick="switchTab('today')">Today</button>
+          <button class="tab ${state.activeTab === 'tomorrow' ? 'active' : ''}" onclick="switchTab('tomorrow')">${hasTomorrow ? 'Tomorrow' : 'Tomorrow ⏳'}</button>
+        </div>
+      </div>
+      ${rates.length > 0 ? `
+        <div class="chart-container">
+          <div class="chart-scroll">
+            <div class="chart">${chartHtml}</div>
+          </div>
+          <div class="chart-hint">Scroll → to see all slots · Tap a bar for price</div>
+        </div>
+      ` : `
+        <div class="no-data" style="margin-bottom:24px;">
+          <div class="emoji">⏳</div>
+          <div>${state.activeTab === 'tomorrow' ? "Tomorrow's prices aren't out yet.<br>They usually appear around 4pm." : 'No price data available.'}</div>
+        </div>
+      `}
+    </div>
+
+    ${upcomingCheap.length > 0 ? `
+    <div class="fade-up">
+      <div class="section-header">
+        <span class="section-title">Cheapest Upcoming</span>
+      </div>
+      <div class="slots">
+        ${upcomingCheap.map((slot, i) => {
+          const fromDate = toLocalTime(slot.valid_from);
+          const toDate = toLocalTime(slot.valid_to);
+          const isToday = fromDate.toDateString() === now.toDateString();
+          const dayLabel = isToday ? 'Today' : 'Tomorrow';
+          return `
+            <div class="slot">
+              <span class="slot-rank">${i + 1}.</span>
+              <span class="slot-time">${dayLabel} ${formatTime(fromDate)}–${formatTime(toDate)}</span>
+              <span class="slot-price" style="color:${priceColor(slot.value_inc_vat)}">${slot.value_inc_vat.toFixed(1)}p</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="footer">
+      Prices include VAT · Updates every 30 min<br>
+      ${state.lastUpdated ? `Last refreshed ${formatTime(state.lastUpdated)}` : ''}
+      <br><br>
+      <span style="cursor:pointer;color:var(--purple)" onclick="loadData()">↻ Refresh now</span>
+    </div>
+  `;
+
+  renderModal();
+
+  // Auto-scroll chart to current time
+  if (state.activeTab === 'today') {
+    setTimeout(() => {
+      const currentBar = document.querySelector('.bar-wrapper.current');
+      if (currentBar) {
+        const container = document.querySelector('.chart-container');
+        const scrollLeft = currentBar.offsetLeft - container.offsetWidth / 2 + currentBar.offsetWidth / 2;
+        container.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' });
+      }
+    }, 100);
+  }
+}
+
+function renderChart(rates) {
+  if (!rates.length) return '';
+  
+  const prices = rates.map(r => r.value_inc_vat);
+  const maxP = Math.max(...prices, 1);
+  const minP = Math.min(...prices, 0);
+  const range = maxP - Math.min(minP, 0);
+  const now = new Date();
+
+  return rates.map((r, i) => {
+    const p = r.value_inc_vat;
+    const from = new Date(r.valid_from);
+    const to = new Date(r.valid_to);
+    const isCurrent = now >= from && now < to;
+    const isNeg = p < 0;
+    
+    const height = Math.max(2, (Math.abs(p) / range) * 100);
+    const color = priceColor(p);
+    const showTime = from.getMinutes() === 0;
+    
+    return `
+      <div class="bar-wrapper ${isCurrent ? 'current' : ''}">
+        <div class="bar-tooltip">${formatTime(from)} · ${p.toFixed(1)}p</div>
+        <div class="bar ${isNeg ? 'negative' : ''}" style="height:${height}%;background:${color};${isCurrent ? 'opacity:1;' : 'opacity:0.7;'}"></div>
+        ${showTime ? `<span class="bar-time">${formatTime(from)}</span>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderModal() {
+  let overlay = document.getElementById('modal-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'modal-overlay';
+    overlay.className = 'modal-overlay';
+    overlay.onclick = (e) => { if (e.target === overlay) toggleModal(); };
+    document.body.appendChild(overlay);
+  }
+
+  overlay.className = `modal-overlay ${state.showModal ? 'open' : ''}`;
+  overlay.innerHTML = `
+    <div class="modal">
+      <h2>Select Region</h2>
+      <p>Choose your electricity region. This is saved for next time.</p>
+      <div class="region-grid">
+        ${Object.entries(REGIONS).map(([code, name]) => `
+          <button class="region-option ${state.region === code ? 'selected' : ''}" onclick="selectRegion('${code}')">
+            <span class="region-letter">${code}</span>${name}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function toggleModal() {
+  state.showModal = !state.showModal;
+  renderModal();
+}
+
+function selectRegion(code) {
+  state.region = code;
+  state.showModal = false;
+  localStorage.setItem('agile-region', code);
+  loadData();
+}
+
+function switchTab(tab) {
+  state.activeTab = tab;
+  render();
+}
+
+// Initial load
+loadData();
+
+// Auto refresh every 5 minutes
+setInterval(loadData, 5 * 60 * 1000);
+
+// Refresh on visibility change (user comes back to tab/app)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) loadData();
+});
+// Register service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+
+</body>
+</html>
