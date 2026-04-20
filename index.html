@@ -791,7 +791,6 @@ function render() {
               </div>
             </div>
           </div>
-          <div class="chart-hint">點擊長條查看價格</div>
         </div>
       ` : `
         <div class="no-data" style="margin-bottom:24px;">
@@ -886,7 +885,7 @@ function renderChart(rates, offPeakAvg) {
     const pct = (Math.abs(p) / niceRange) * 100;
     const height = Math.max(1.5, pct);
     const color = priceColor(p);
-    const showTime = from.getMinutes() === 0 && from.getHours() % 3 === 0;
+    const showTime = from.getMinutes() === 0;
     
     return `
       <div class="bar-wrapper ${isCurrent ? 'current' : ''}">
