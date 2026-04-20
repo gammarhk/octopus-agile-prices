@@ -690,7 +690,6 @@ function render() {
     const h = new Date(r.valid_from).getHours();
     return h < 16 || h >= 19;
   }
-  const allRates = [...state.today, ...state.tomorrow];
   const activeRates = state.activeTab === 'today' ? state.today : state.tomorrow;
   const offPeakRates = activeRates.filter(isOffPeak);
   const offPeakAvg = offPeakRates.length
@@ -699,7 +698,7 @@ function render() {
 
   // Below-average upcoming periods, merged when consecutive
   const now = new Date();
-  const upcomingBelow = allRates
+  const upcomingBelow = activeRates
     .filter(r => new Date(r.valid_to) > now && r.value_inc_vat < offPeakAvg)
     .sort((a, b) => new Date(a.valid_from) - new Date(b.valid_from));
 
