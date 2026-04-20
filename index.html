@@ -224,7 +224,7 @@
     flex-direction: column;
     justify-content: space-between;
     padding-bottom: 52px;
-    height: 180px;
+    height: 260px;
     min-width: 36px;
     text-align: right;
     padding-right: 6px;
@@ -252,7 +252,7 @@
     display: flex;
     align-items: flex-end;
     gap: 2px;
-    height: 180px;
+    height: 260px;
     padding-bottom: 52px;
     position: relative;
   }
@@ -864,7 +864,7 @@ function renderChart(rates, offPeakAvg) {
   const now = new Date();
 
   // Y-axis: generate nice tick marks
-  const chartHeight = 128; // 180px - 52px padding
+  const chartHeight = 208; // 260px - 52px padding
   const niceMax = Math.ceil(maxP / 10) * 10;
   const niceMin = Math.min(0, Math.floor(minP / 10) * 10);
   const niceRange = niceMax - niceMin;
