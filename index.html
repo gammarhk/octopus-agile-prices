@@ -238,20 +238,17 @@
   }
   .chart-scrollable {
     flex: 1;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
   }
-  .chart-scrollable::-webkit-scrollbar { height: 4px; }
-  .chart-scrollable::-webkit-scrollbar-track { background: transparent; }
-  .chart-scrollable::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 2px; }
+  .chart-scrollable::-webkit-scrollbar { display: none; }
   .chart-scroll {
-    min-width: 600px;
+    width: 100%;
     position: relative;
   }
   .chart {
     display: flex;
     align-items: flex-end;
-    gap: 2px;
+    gap: 1px;
     height: 260px;
     padding-bottom: 52px;
     position: relative;
@@ -794,7 +791,7 @@ function render() {
               </div>
             </div>
           </div>
-          <div class="chart-hint">向右滑動查看所有時段 · 點擊長條查看價格</div>
+          <div class="chart-hint">點擊長條查看價格</div>
         </div>
       ` : `
         <div class="no-data" style="margin-bottom:24px;">
@@ -840,18 +837,6 @@ function render() {
   `;
 
   renderModal();
-
-  // Auto-scroll chart to current time
-  if (state.activeTab === 'today') {
-    setTimeout(() => {
-      const currentBar = document.querySelector('.bar-wrapper.current');
-      if (currentBar) {
-        const container = document.querySelector('.chart-scrollable');
-        const scrollLeft = currentBar.offsetLeft - container.offsetWidth / 2 + currentBar.offsetWidth / 2;
-        container.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' });
-      }
-    }, 100);
-  }
 }
 
 function renderChart(rates, offPeakAvg) {
@@ -901,7 +886,7 @@ function renderChart(rates, offPeakAvg) {
     const pct = (Math.abs(p) / niceRange) * 100;
     const height = Math.max(1.5, pct);
     const color = priceColor(p);
-    const showTime = from.getMinutes() === 0;
+    const showTime = from.getMinutes() === 0 && from.getHours() % 3 === 0;
     
     return `
       <div class="bar-wrapper ${isCurrent ? 'current' : ''}">
