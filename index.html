@@ -530,7 +530,10 @@ function getCurrentSlot(rates) {
   });
 }
 
+let debugLog = [];
+
 async function fetchRates(region) {
+  debugLog = [];
   const now = new Date();
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);
@@ -539,15 +542,26 @@ async function fetchRates(region) {
   const tomorrowEnd = new Date(todayEnd);
   tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
 
+  debugLog.push(`now: ${now.toISOString()}`);
+  debugLog.push(`todayStart: ${todayStart.toISOString()}`);
+  debugLog.push(`todayEnd: ${todayEnd.toISOString()}`);
+
   // Try each product code until one returns data
   for (const product of PRODUCTS) {
     try {
       const url = getApiUrl(product, region);
+      debugLog.push(`Trying: ${url}`);
       const resp = await fetch(url);
-      if (!resp.ok) continue;
+      debugLog.push(`Status: ${resp.status}`);
+      if (!resp.ok) { debugLog.push('Not OK, skipping'); continue; }
       const data = await resp.json();
 
       let allRates = data.results || [];
+      debugLog.push(`Results count: ${allRates.length}`);
+      if (allRates.length > 0) {
+        debugLog.push(`First: ${allRates[0].valid_from}`);
+        debugLog.push(`Last: ${allRates[allRates.length-1].valid_from}`);
+      }
       if (allRates.length === 0) continue;
 
       allRates.sort((a, b) => new Date(a.valid_from) - new Date(b.valid_from));
@@ -562,8 +576,11 @@ async function fetchRates(region) {
         return from >= todayEnd && from < tomorrowEnd;
       });
 
+      debugLog.push(`Today rates: ${todayRates.length}, Tomorrow: ${tomorrowRates.length}`);
+
       return { today: todayRates, tomorrow: tomorrowRates };
     } catch (e) {
+      debugLog.push(`Error: ${e.message}`);
       continue;
     }
   }
@@ -616,6 +633,10 @@ function render() {
         <div>Couldn't load prices<br><small style="color:var(--text-muted)">${state.error}</small></div>
         <br>
         <button onclick="loadData()" style="background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple);border-radius:8px;padding:10px 20px;font-family:inherit;font-size:14px;cursor:pointer;">Try Again</button>
+      </div>
+      <div style="margin-top:24px;padding:12px;background:#1e293b;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;color:#94a3b8;word-break:break-all;">
+        <div style="color:#a78bfa;margin-bottom:8px;">DEBUG</div>
+        ${debugLog.map(l => `<div>${l}</div>`).join('')}
       </div>
     `;
     renderModal();
@@ -738,6 +759,11 @@ function render() {
       ${state.lastUpdated ? `Last refreshed ${formatTime(state.lastUpdated)}` : ''}
       <br><br>
       <span style="cursor:pointer;color:var(--purple)" onclick="loadData()">↻ Refresh now</span>
+    </div>
+
+    <div style="margin-top:24px;padding:12px;background:#1e293b;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;color:#94a3b8;word-break:break-all;">
+      <div style="color:#a78bfa;margin-bottom:8px;">DEBUG</div>
+      ${debugLog.map(l => `<div>${l}</div>`).join('')}
     </div>
   `;
 
