@@ -881,17 +881,16 @@ function renderChart(rates, offPeakAvg) {
     const from = new Date(r.valid_from);
     const to = new Date(r.valid_to);
     const isCurrent = now >= from && now < to;
-    const isNeg = p < 0;
     
-    const pct = (Math.abs(p) / niceRange) * 100;
-    const height = Math.max(1.5, pct);
+    const pct = ((p - niceMin) / niceRange) * 100;
+    const height = Math.max(1, pct);
     const color = priceColor(p);
     const showTime = from.getMinutes() === 0;
     
     return `
       <div class="bar-wrapper ${isCurrent ? 'current' : ''}">
         <div class="bar-tooltip">${formatTime(from)} · ${p.toFixed(1)}p</div>
-        <div class="bar ${isNeg ? 'negative' : ''}" style="height:${height}%;background:${color};${isCurrent ? 'opacity:1;' : 'opacity:0.7;'}"></div>
+        <div class="bar" style="height:${height}%;background:${color};${isCurrent ? 'opacity:1;' : 'opacity:0.7;'}"></div>
         ${showTime ? `<span class="bar-time">${formatTime(from)}</span>` : ''}
       </div>
     `;
