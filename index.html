@@ -288,20 +288,22 @@
     flex-direction: column;
     align-items: center;
     height: 100%;
-    justify-content: flex-end;
     position: relative;
     cursor: pointer;
   }
   .bar {
     width: 100%;
     min-height: 2px;
-    border-radius: 3px 3px 0 0;
     transition: all 0.3s ease;
-    position: relative;
+    position: absolute;
+    left: 0;
+    right: 0;
   }
-  .bar.negative {
+  .bar.pos {
+    border-radius: 3px 3px 0 0;
+  }
+  .bar.neg {
     border-radius: 0 0 3px 3px;
-    align-self: flex-start;
   }
   .bar-wrapper.current .bar {
     box-shadow: 0 0 12px rgba(167,139,250,0.4);
@@ -876,21 +878,31 @@ function renderChart(rates, offPeakAvg) {
     <span class="chart-avg-label">平均 ${offPeakAvg.toFixed(1)}p</span>
   </div>`;
 
+  const zeroLine = ((0 - niceMin) / niceRange) * 100;
+
   const bars = rates.map((r, i) => {
     const p = r.value_inc_vat;
     const from = new Date(r.valid_from);
     const to = new Date(r.valid_to);
     const isCurrent = now >= from && now < to;
-    
-    const pct = ((p - niceMin) / niceRange) * 100;
-    const height = Math.max(1, pct);
     const color = priceColor(p);
     const showTime = from.getMinutes() === 0;
+    
+    let bottom, height, barClass;
+    if (p >= 0) {
+      bottom = zeroLine;
+      height = Math.max(0.5, (p / niceRange) * 100);
+      barClass = 'pos';
+    } else {
+      bottom = ((p - niceMin) / niceRange) * 100;
+      height = Math.max(0.5, (Math.abs(p) / niceRange) * 100);
+      barClass = 'neg';
+    }
     
     return `
       <div class="bar-wrapper ${isCurrent ? 'current' : ''}">
         <div class="bar-tooltip">${formatTime(from)} · ${p.toFixed(1)}p</div>
-        <div class="bar" style="height:${height}%;background:${color};${isCurrent ? 'opacity:1;' : 'opacity:0.7;'}"></div>
+        <div class="bar ${barClass}" style="bottom:${bottom}%;height:${height}%;background:${color};${isCurrent ? 'opacity:1;' : 'opacity:0.7;'}"></div>
         ${showTime ? `<span class="bar-time">${formatTime(from)}</span>` : ''}
       </div>
     `;
